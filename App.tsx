@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import InputForm from './components/InputForm';
 import ResultDisplay from './components/ResultDisplay';
 import ApiKeyModal from './components/ApiKeyModal';
-import ProAuthModal from './components/ProAuthModal';
 import {
   generateStepSummary,
   generateStepTeachingProcess,
@@ -43,8 +42,7 @@ const App: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [docxArrayBuffer, setDocxArrayBuffer] = useState<ArrayBuffer | null>(null);
   const [docxText, setDocxText] = useState<string | null>(null);
-  const [isProUser, setIsProUser] = useState(false);
-  const [showProAuthModal, setShowProAuthModal] = useState(false);
+
   const [currentInput, setCurrentInput] = useState<LessonInput | null>(null);
   const [showSessionRestore, setShowSessionRestore] = useState(false);
   const [savedSession, setSavedSession] = useState<SessionData | null>(null);
@@ -55,7 +53,7 @@ const App: React.FC = () => {
     if (storedKey) setApiKey(storedKey);
     if (storedModel) setSelectedModel(storedModel);
     if (!storedKey) setIsSettingsOpen(true);
-    if (localStorage.getItem('pro_authenticated') === 'true') setIsProUser(true);
+
     
     // Kiểm tra phiên cũ
     const session = loadSessionFromStorage();
@@ -251,13 +249,6 @@ const App: React.FC = () => {
             {!apiKey && <span className="text-yellow-200 hidden sm:inline">Lấy API key để sử dụng app</span>}
           </button>
 
-          <button 
-            className={`flex items-center gap-2 px-5 py-2 text-sm font-bold rounded-lg transition-colors shadow-sm ${isProUser ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-yellow-300 hover:bg-yellow-400 text-yellow-900 border border-yellow-400'}`}
-            onClick={() => !isProUser && setShowProAuthModal(true)}
-          >
-            <span className="material-symbols-outlined text-[20px]">{isProUser ? 'verified' : 'lock'}</span>
-            <span>{isProUser ? 'Pro đã kích hoạt' : 'Nâng cấp Pro'}</span>
-          </button>
         </div>
       </header>
 
@@ -312,8 +303,7 @@ const App: React.FC = () => {
             apiKey={apiKey}
             selectedModel={selectedModel}
             docxText={docxText}
-            isProUser={isProUser}
-            onRequestProAuth={() => setShowProAuthModal(true)}
+
             currentStep={currentStep}
             totalSteps={6}
             onContinue={handleContinue}
@@ -370,15 +360,7 @@ const App: React.FC = () => {
         initialModel={selectedModel}
       />
 
-      {/* Pro Auth Modal */}
-      <ProAuthModal
-        isOpen={showProAuthModal}
-        onClose={() => setShowProAuthModal(false)}
-        onAuthenticated={(name) => {
-          setIsProUser(true);
-          setShowProAuthModal(false);
-        }}
-      />
+
     </div>
   );
 };

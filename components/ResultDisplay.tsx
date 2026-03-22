@@ -12,8 +12,7 @@ interface ResultDisplayProps {
    apiKey?: string;
    selectedModel?: string;
    docxText?: string | null;
-   isProUser?: boolean;
-   onRequestProAuth?: () => void;
+
    // Step-by-step props
    currentStep: number;
    totalSteps: number;
@@ -49,9 +48,8 @@ type SimSubTab = 'preview' | 'questions' | 'guide' | 'code';
 
 const SimulationView: React.FC<{
    simulation: Simulation;
-   isProUser?: boolean;
-   onRequestProAuth?: () => void;
-}> = ({ simulation, isProUser, onRequestProAuth }) => {
+
+}> = ({ simulation }) => {
    const [simTab, setSimTab] = useState<SimSubTab>('preview');
    const [copied, setCopied] = useState(false);
    const simContainerRef = useRef<HTMLDivElement>(null);
@@ -82,7 +80,6 @@ const SimulationView: React.FC<{
    }, [simTab, simulation]);
 
    const handleDownloadHtml = () => {
-      if (!isProUser) { onRequestProAuth?.(); return; }
       const blob = new Blob([simulation.code], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -95,7 +92,6 @@ const SimulationView: React.FC<{
    };
 
    const handleCopyCode = () => {
-      if (!isProUser) { onRequestProAuth?.(); return; }
       navigator.clipboard.writeText(simulation.code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -229,7 +225,7 @@ const SimulationView: React.FC<{
 
 const ResultDisplay: React.FC<ResultDisplayProps> = ({
    data, onReset, docxArrayBuffer, apiKey, selectedModel, docxText,
-   isProUser, onRequestProAuth, currentStep, totalSteps, onContinue,
+   currentStep, totalSteps, onContinue,
    isStepLoading, stepError, onOpenSettings
 }) => {
    const [activeTab, setActiveTab] = useState<TabType>('summary');
@@ -310,7 +306,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
 
    /** Xuất file DOCX bôi đỏ từ file gốc */
    const downloadModifiedDocx = async () => {
-      if (!isProUser) { onRequestProAuth?.(); return; }
       if (!docxArrayBuffer) {
          alert('Chức năng này yêu cầu upload file DOCX gốc. Vui lòng tải Phụ Lục (.doc) thay thế.');
          return;
@@ -345,7 +340,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
    };
 
    const downloadDocx = () => {
-      if (!isProUser) { onRequestProAuth?.(); return; }
       const header = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
       <head><meta charset='utf-8'><style>
@@ -373,7 +367,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
 
    /** Tạo PPTX */
    const handleGeneratePptx = async () => {
-      if (!isProUser) { onRequestProAuth?.(); return; }
       setIsGeneratingPptx(true);
       try {
          await generatePptx(data);
@@ -467,17 +460,8 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
                </div>
             )}
 
-            {/* Button — Pro gate */}
+            {/* Button Continue */}
              {!stepError && (
-                currentStep === 0 && !isProUser ? (
-                <button
-                   onClick={() => onRequestProAuth?.()}
-                   className="w-full py-4 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 hover:shadow-xl flex items-center justify-center gap-3 text-lg"
-                >
-                   <span className="material-symbols-outlined text-xl">lock</span>
-                   <span>🔓 NÂNG CẤP PRO để mở khóa đầy đủ 6 bước phân tích</span>
-                </button>
-                ) : (
                 <button
                    onClick={onContinue}
                    disabled={isStepLoading}
@@ -495,7 +479,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
                      </>
                   )}
                </button>
-            ))}
+            )}
             {isStepLoading && (
                <p className="text-center text-teal-500 text-sm mt-2 animate-pulse">
                   Bước {currentStep + 2}/{totalSteps} — quá trình có thể mất 15-30 giây...
@@ -736,8 +720,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
                   {data.simulation ? (
                      <SimulationView
                         simulation={data.simulation}
-                        isProUser={isProUser}
-                        onRequestProAuth={onRequestProAuth}
+
                      />
                   ) : (
                      <div className="text-center py-10 text-gray-400">
@@ -889,7 +872,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
                            <button
                               className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-lg shadow-sm transition-colors"
                               onClick={() => {
-                                 if (!isProUser) { onRequestProAuth?.(); return; }
                                  const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>body{font-family:'Times New Roman',serif;font-size:13pt;line-height:1.6;margin:2cm;}h2{color:#0d9488;border-bottom:2px solid #ccfbf1;padding-bottom:6px;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#0d9488;color:white;padding:8px;border:1px solid #ddd;}td{padding:8px;border:1px solid #ddd;}.activity-block{background:#f0fdfa;border-left:4px solid #0d9488;padding:14px;margin:10px 0;}.game-block{background:#fef9c3;border-left:4px solid #ca8a04;padding:14px;margin:10px 0;}.note-block{background:#eff6ff;border-left:4px solid #3b82f6;padding:12px;margin:8px 0;}p{margin-bottom:6pt;}ul,ol{padding-left:24pt;margin:6pt 0;}li{margin-bottom:4pt;}h3{margin-top:12pt;color:#115e59;}h4{margin-top:10pt;color:#134e4a;}</style></head><body>`;
                                  const footer = '</body></html>';
                                  const blob = new Blob(['\ufeff', header + proLessonPlanHtml + footer], { type: 'application/msword' });
